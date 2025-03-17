@@ -1,0 +1,54 @@
+<div class="container mt-5">
+  <h2 class="text-center">BMI Calculator</h2>
+
+  <div class="row justify-content-center">
+    <div class="col-md-6">
+      <div class="card shadow">
+        <div class="card-body">
+          <form id="bmiForm">
+            <div class="mb-3">
+              <label for="weight" class="form-label">Weight (kg)</label>
+              <input type="number" class="form-control" id="weight" required />
+            </div>
+            <div class="mb-3 row">
+              <div class="col">
+                <label for="feet" class="form-label">Height (Feet)</label>
+                <input type="number" class="form-control" id="feet" required />
+              </div>
+              <div class="col">
+                <label for="inches" class="form-label">Height (Inches)</label>
+                <input type="number" class="form-control" id="inches" required />
+              </div>
+            </div>
+            <button type="submit" class="btn btn-primary w-100">Calculate BMI</button>
+          </form>
+          <div class="mt-4 text-center" id="bmiResult"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  document.getElementById('bmiForm').addEventListener('submit', function (event) {
+    event.preventDefault();
+
+    const weight = document.getElementById('weight').value;
+    const feet = document.getElementById('feet').value;
+    const inches = document.getElementById('inches').value;
+
+    fetch('/bmi', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ weight, feet, inches }),
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        document.getElementById('bmiResult').innerHTML = `
+          <h4>Your BMI: <strong>${data.bmi}</strong></h4>
+          <p class="text-${data.category === 'Normal weight' ? 'success' : 'danger'}"><strong>${data.category}</strong></p>
+      `;
+      })
+      .catch((error) => console.error('Error:', error));
+  });
+</script>

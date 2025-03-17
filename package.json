@@ -1,0 +1,41 @@
+{
+  "name": "fitness",
+  "version": "1.0.0",
+  "description": "",
+  "main": "src/app.ts",
+  "scripts": {
+    "db:setup": "ts-node src/config/dbSetup.ts",
+    "dev": "tsc && node dist/app.js",
+    "start": "nodemon --exec ts-node src/app.ts",
+    "build": "rimraf dist && tsc && npm run copy-assets",
+    "copy-assets": "copyfiles -u 1 src/client/**/* dist",
+    "watch": "tsc --watch",
+    "format": "prettier --write ."
+  },
+  "dependencies": {
+    "@types/express": "^5.0.0",
+    "@types/node": "^22.13.10",
+    "bcryptjs": "^3.0.2",
+    "bootstrap": "^5.3.3",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "ejs": "^3.1.10",
+    "express": "^4.21.2",
+    "express-ejs-layouts": "^2.5.1",
+    "fs": "^0.0.1-security",
+    "jsonwebtoken": "^9.0.2",
+    "mysql2": "^3.13.0"
+  },
+  "devDependencies": {
+    "@types/bcryptjs": "^2.4.6",
+    "@types/cors": "^2.8.17",
+    "@types/express-ejs-layouts": "^2.5.4",
+    "@types/jsonwebtoken": "^9.0.9",
+    "copyfiles": "^2.4.1",
+    "nodemon": "^3.1.9",
+    "prettier": "^3.5.3",
+    "rimraf": "^6.0.1",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.8.2"
+  }
+}

@@ -1,0 +1,50 @@
+<!-- Dashboard Tabs -->
+<ul class="nav nav-tabs" id="dashboardTabs">
+  <li class="nav-item">
+    <a class="nav-link active" id="progress-tab" data-bs-toggle="tab" href="#progress"
+      >Track Progress</a
+    >
+  </li>
+  <li class="nav-item">
+    <a class="nav-link" id="workout-tab" data-bs-toggle="tab" href="#workout">Workout Plans</a>
+  </li>
+  <li class="nav-item">
+    <a class="nav-link" id="bmi-tab" data-bs-toggle="tab" href="#bmi">BMI Calculator</a>
+  </li>
+  <li class="nav-item">
+    <a class="nav-link" id="community-tab" data-bs-toggle="tab" href="#community">Community</a>
+  </li>
+</ul>
+
+<div class="tab-content mt-3">
+  <!-- Track Progress -->
+  <div class="tab-pane fade show active" id="progress">
+    <h3>Track Your Progress</h3>
+    <p>Monitor your weight, reps, and overall fitness improvements.</p>
+    <%- include('history.ejs') -%>
+  </div>
+
+  <!-- Workout Plans -->
+  <div class="tab-pane fade" id="workout">
+    <h3>Workout Plans</h3>
+    <p>Custom workouts based on your goals, fitness level, and schedule.</p>
+    <%- include('plan.ejs') -%>
+  </div>
+
+  <!-- BMI -->
+  <div class="tab-pane fade" id="bmi">
+    <h3>BMI Calculator</h3>
+    <p>
+      Body mass index (BMI) is a measure of body fat based on height and weight that applies to
+      adult men and women.
+    </p>
+    <%- include('bmi.ejs') -%>
+  </div>
+
+  <!-- Community -->
+  <div class="tab-pane fade" id="community">
+    <h3>Join the Community</h3>
+    <p>Connect with other fitness enthusiasts, share progress, and get motivated!</p>
+    <%- include('community.ejs') -%>
+  </div>
+</div>

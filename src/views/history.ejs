@@ -1,0 +1,180 @@
+<div class="container mt-5">
+  <!-- New Workout Session Form -->
+  <div class="card p-4">
+    <h4>Log a New Workout</h4>
+    <form id="workoutForm">
+      <div id="history-exerciseList">
+        <!-- Exercise rows will be added here -->
+      </div>
+
+      <button type="button" id="addExerciseBtn" class="btn btn-secondary mt-2">Add Exercise</button>
+
+      <div class="mb-3 mt-3">
+        <label class="form-label">Total Workout Time (minutes)</label>
+        <input type="number" class="form-control" id="total_time" required />
+      </div>
+
+      <div class="mb-3">
+        <label class="form-label">Comments</label>
+        <textarea class="form-control" id="comment"></textarea>
+      </div>
+
+      <button type="submit" class="btn btn-primary w-100">Save Workout</button>
+    </form>
+  </div>
+
+  <hr />
+
+  <!-- Workout History -->
+  <button class="btn btn-info w-100 mt-3" onclick="loadWorkoutHistory()">View History</button>
+  <div id="workoutHistory" class="mt-3"></div>
+</div>
+
+<script>
+  let exerciseIndex = 0;
+  let exercisesData = []; // To store exercise data once fetched
+
+  // Fetch exercise data once when the page loads
+  function fetchHistoryExercises() {
+    fetch('/exercises')
+      .then((res) => res.json())
+      .then((data) => {
+        exercisesData = data; // Store exercises data in a global variable
+        addExercise(); // Add the first exercise input field after fetching the data
+      })
+      .catch((err) => console.error('Error loading exercises:', err));
+  }
+
+  // Add Exercise functionality
+  document.getElementById('addExerciseBtn').addEventListener('click', addExercise);
+
+  function addExercise() {
+    const container = document.getElementById('history-exerciseList');
+    const index = exerciseIndex;
+
+    // Create a new exercise row
+    const exerciseDiv = document.createElement('div');
+    exerciseDiv.classList.add(
+      'd-flex',
+      'align-items-center',
+      'border',
+      'p-3',
+      'mt-3',
+      'exercise-row'
+    );
+    exerciseDiv.id = `exercise-${index}`;
+
+    exerciseDiv.innerHTML = `
+      <select class="form-select exercise_id me-2" id="exercise-select-${index}" required></select>
+
+      <input type="number" class="form-control sets me-2" placeholder="Sets" required>
+      <input type="number" class="form-control reps me-2" placeholder="Reps" required>
+      <input type="number" class="form-control weight me-2" placeholder="Weight (kg)" required>
+
+      <button type="button" class="btn btn-danger" onclick="removeExercise(${index})">Delete</button>
+    `;
+
+    container.appendChild(exerciseDiv);
+    populateDropdown(index); // Populate the dropdown with the stored exercises data
+    exerciseIndex++; // Increment the exercise index for the next addition
+  }
+
+  // Remove Exercise
+  function removeExercise(index) {
+    const row = document.getElementById(`exercise-${index}`);
+    if (row) row.remove();
+  }
+
+  // Populate exercise dropdown using stored exercises data
+  function populateDropdown(index) {
+    const dropdown = document.getElementById(`exercise-select-${index}`);
+    if (dropdown && exercisesData.length > 0) {
+      dropdown.innerHTML = exercisesData
+        .map((e) => `<option value="${e.id}">${e.name}</option>`)
+        .join('');
+    }
+  }
+
+  // Initialize by fetching exercises when the page loads
+  document.addEventListener('DOMContentLoaded', () => {
+    fetchHistoryExercises(); // Fetch exercises once when the page is ready
+  });
+
+  // Submit Workout Session
+  document.getElementById('workoutForm').addEventListener('submit', function (event) {
+    event.preventDefault();
+
+    const exercises = Array.from(document.querySelectorAll('.exercise-row')).map((row) => ({
+      exercise_id: row.querySelector('.exercise_id').value,
+      sets: row.querySelector('.sets').value,
+      reps: row.querySelector('.reps').value,
+      weight: row.querySelector('.weight').value,
+    }));
+
+    fetch('/workout/history', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        total_time: document.getElementById('total_time').value,
+        comment: document.getElementById('comment').value,
+        exercises,
+      }),
+    })
+      .then((res) => res.json())
+      .then((response) => {
+        loadWorkoutHistory();
+      })
+      .catch((err) => console.error('Error saving workout:', err));
+  });
+
+  // Load Workout History
+  function loadWorkoutHistory() {
+    fetch('/workout/history')
+      .then((res) => res.json())
+      .then((data) => {
+        const historyContainer = document.getElementById('workoutHistory');
+        historyContainer.innerHTML = ''; // Clear previous history
+
+        if (data.length === 0) {
+          historyContainer.innerHTML =
+            "<p class='text-center text-muted'>No workout history found.</p>";
+          return;
+        }
+
+        data.forEach((session) => {
+          const sessionHtml = `
+                    <div class="card mt-3">
+                        <div class="card-header bg-primary text-white">
+                            <h5 class="mb-0">${new Date(session.created_at).toLocaleDateString()}</h5>
+                        </div>
+                        <div class="card-body">
+                            <p><strong>Total Time:</strong> ${session.total_time || 'N/A'} minutes</p>
+                            <p><strong>Comment:</strong> ${session.comment || 'No comments'}</p>
+                            
+                            <h6 class="mt-3">Exercises:</h6>
+                            <ul class="list-group">
+                                ${session.exercises
+                                  .map(
+                                    (ex) => `
+                                    <li class="list-group-item">
+                                        <strong>${ex.exercise_name}</strong> - 
+                                        ${ex.sets} sets x ${ex.reps} reps 
+                                        (${ex.weight ? ex.weight + ' kg' : 'Bodyweight'})
+                                    </li>
+                                `
+                                  )
+                                  .join('')}
+                            </ul>
+                        </div>
+                    </div>
+                `;
+          historyContainer.insertAdjacentHTML('beforeend', sessionHtml);
+        });
+      })
+      .catch((err) => {
+        console.error('Error fetching history:', err);
+        document.getElementById('workoutHistory').innerHTML =
+          "<p class='text-danger'>Failed to load workout history.</p>";
+      });
+  }
+</script>

@@ -1,4 +1,5 @@
-import express from 'express';
+import express from "express";
+import { Request, Response } from "express-serve-static-core";
 import dotenv from 'dotenv';
 import cors from 'cors';
 import authRoutes from './routes/authRoutes';
@@ -10,6 +11,10 @@ import { ExerciseController } from './controllers/exerciseController';
 import { ResultSetHeader } from 'mysql2';
 import { User } from './models/User';
 import bcrypt from 'bcryptjs';
+import fetch from 'node-fetch';
+import { FoodController } from "./controllers/FoodController";
+
+
 
 dotenv.config();
 
@@ -68,6 +73,17 @@ app.get('/', (req, res) => {
     layout: false,
   });
 });
+
+
+// Register routes with authentication middleware
+app.get("/foods", authenticate, (req, res) => FoodController.getFoods(req, res));
+app.post("/foods/:foodId", authenticate, (req, res) => FoodController.addFoodToMealLog(req, res));
+app.delete("/remove-food/:foodId", authenticate, async (req, res) => {
+  await FoodController.removeFood(req, res);
+});
+
+// --------------------------------------------------------------------------------------------
+
 app.get('/signup', (req, res) => {
   res.render('signup', { layout: false });
 });
@@ -177,7 +193,7 @@ const startServer = async () => {
     await selectDatabase();
 
     // Start the server
-    const PORT = process.env.PORT || 3000;
+    const PORT = process.env.PORT || 5000;
     app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
   } catch (error) {
     console.error('Error starting the server:', error);

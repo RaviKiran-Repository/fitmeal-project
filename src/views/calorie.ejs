@@ -1,0 +1,155 @@
+<div class="mt-5 p-4 border rounded shadow-sm bg-light">
+    <h2 class="text-center fw-bold mb-3">
+        <i class="fas fa-utensils text-primary me-2"></i>
+        Calorie Logger
+    </h2>
+
+    <!-- Search for food -->
+    <div class="mb-3">
+        <div class="input-group">
+            <input
+                type="text"
+                id="searchQuery"
+                class="form-control"
+                placeholder="Search for food..."
+                style="box-shadow:none;"
+            />
+            <button onclick="searchFood()" class="btn btn-primary">
+                <i class="fas fa-search"></i>
+            </button>
+        </div>
+    </div>
+
+    <!-- Display search results -->
+    <div class="mb-3" id="foodResultsContainer">
+        <p class="text-center text-muted">Search for food items.</p>
+    </div>
+
+    <!-- Meal log -->
+    <h3 class="fw-bold">
+        <i class="fas fa-clipboard-list text-secondary me-2"></i>
+        Your Meal Log
+    </h3>
+    <div class="mb-3" id="mealLogContainer">
+        <p class="text-center text-muted">No meals logged yet.</p>
+    </div>
+
+    <!-- Total Calories -->
+    <h3 class="fw-bold text-center">
+        <i class="fas fa-chart-pie text-warning me-2"></i>
+        Total Calories: <span id="totalCalories"></span> kcal
+    </h3>
+
+    <div class="d-flex justify-content-center my-3">
+        <div style="width: 150px; height: 150px;">
+            <canvas id="calorieChart"></canvas>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Function to search food from the USDA API
+    async function searchFood() {
+        const searchQuery = document.getElementById("searchQuery").value.trim();
+        if (!searchQuery) {
+            alert("Please enter a food item to search.");
+            return;
+        }
+
+        try {
+            const response = await fetch(`/foods?query=${searchQuery}`);
+            const foodResults = await response.json();
+            displaySearchResults(foodResults);
+        } catch (error) {
+            console.error("Error fetching food data:", error);
+        }
+    }
+
+    // Function to display search results dynamically
+    function displaySearchResults(foodResults) {
+        const container = document.getElementById("foodResultsContainer");
+        container.innerHTML = "";
+
+        if (foodResults.length === 0) {
+            container.innerHTML = `<p class="text-center text-muted">No food found.</p>`;
+            return;
+        }
+
+        foodResults.forEach(food => {
+            const energyNutrient = food.calories || 0;
+            const foodItem = document.createElement("div");
+            foodItem.className = "d-flex justify-content-between align-items-center border rounded p-2 mb-2 bg-white";
+            foodItem.innerHTML = `
+                <span>${food.food_name} - ${energyNutrient} kcal</span>
+                <button onclick="addFood(${food.id})" class="btn btn-success btn-sm">
+                    <i class="fas fa-plus"></i>
+                </button>
+            `;
+            container.appendChild(foodItem);
+        });
+    }
+
+    // Function to add food to the meal log
+    async function addFood(foodId) {
+        try {
+            const response = await fetch(`/foods/${foodId}`, { method: "POST" });
+            const result = await response.json();
+            updateMealLog(result.mealLog);
+        } catch (error) {
+            console.error("Error adding food:", error);
+        }
+    }
+
+    // Function to remove food from the meal log
+    async function removeFood(foodId) {
+        try {
+            const response = await fetch(`/remove-food/${foodId}`, { method: "DELETE" });
+            const result = await response.json();
+            updateMealLog(result.mealLog);
+        } catch (error) {
+            console.error("Error removing food:", error);
+        }
+    }
+
+    // Function to update the meal log dynamically
+    function updateMealLog(mealLog) {
+        const container = document.getElementById("mealLogContainer");
+        container.innerHTML = "";
+
+        if (mealLog.length === 0) {
+            container.innerHTML = `<p class="text-center text-muted">No meals logged yet.</p>`;
+            document.getElementById("totalCalories").innerText = "0";
+            return;
+        }
+
+        let totalCalories = 0;
+        mealLog.forEach(food => {
+            const energy = food.calories || 100;    
+            totalCalories += energy * food.quantity;
+            const foodItem = document.createElement("div");
+            foodItem.className = "d-flex justify-content-between align-items-center border rounded p-2 mb-2 bg-white";
+            foodItem.innerHTML = `
+                <span>${food.food_name} - ${food.quantity} - ${food.calories} kcal</span>
+                <button onclick="removeFood(${food.id})" class="btn btn-danger btn-sm">
+                    <i class="fas fa-trash"></i>
+                </button>
+            `;
+            container.appendChild(foodItem);
+        });
+
+        document.getElementById("totalCalories").innerText = totalCalories;
+    }
+
+    // Fetch and display meal log on page load
+    async function fetchMealLog() {
+        try {
+            const response = await fetch("/meal-log");
+            const mealLog = await response.json();
+            updateMealLog(mealLog);
+        } catch (error) {
+            console.error("Error fetching meal log:", error);
+        }
+    }
+
+    fetchMealLog(); // Load meal log when the page loads
+</script>
